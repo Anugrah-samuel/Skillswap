@@ -3,12 +3,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Search } from "lucide-react";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Plus, Edit, Trash2, Search, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertSkillSchema, type Skill } from "@shared/schema";
 
 const categories = ["Technology", "Design", "Business", "Languages", "Arts", "Fitness", "Music", "Cooking"];
 const levels = ["Beginner", "Intermediate", "Advanced", "Expert"];
@@ -17,82 +22,105 @@ const types = ["Teaching", "Learning"];
 export default function Skills() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingSkill, setEditingSkill] = useState<any>(null);
+  const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterType, setFilterType] = useState("all");
 
-  const [formData, setFormData] = useState({
-    title: "",
-    description: "",
-    category: "",
-    level: "",
-    type: "",
-    availability: "",
+  // TODO: Replace with actual user ID from auth context
+  const userId = "user-1";
+
+  const form = useForm({
+    resolver: zodResolver(insertSkillSchema.extend({
+      userId: insertSkillSchema.shape.userId.optional(),
+    })),
+    defaultValues: {
+      userId,
+      title: "",
+      description: "",
+      category: "",
+      level: "",
+      type: "",
+      availability: "",
+    },
   });
 
-  const [skills, setSkills] = useState([
-    {
-      id: "1",
-      title: "React Development",
-      description: "Building modern web applications with React, TypeScript, and modern tooling",
-      category: "Technology",
-      level: "Advanced",
-      type: "Teaching",
-      availability: "Weekends",
+  const { data: skills = [], isLoading, isError, error, refetch } = useQuery<Skill[]>({
+    queryKey: ["/api/skills"],
+    queryFn: async () => {
+      const response = await fetch("/api/skills?userId=" + userId);
+      if (!response.ok) throw new Error("Failed to fetch skills");
+      return response.json();
     },
-    {
-      id: "2",
-      title: "UI/UX Design",
-      description: "User interface design, prototyping, and user experience principles",
-      category: "Design",
-      level: "Intermediate",
-      type: "Learning",
-      availability: "Evenings",
-    },
-    {
-      id: "3",
-      title: "Spanish Language",
-      description: "Conversational Spanish and basic grammar for beginners",
-      category: "Languages",
-      level: "Expert",
-      type: "Teaching",
-      availability: "Flexible",
-    },
-  ]);
+  });
 
-  const openDialog = (skill?: any) => {
+  const createMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", "/api/skills", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/skills"] });
+      toast({ title: "Skill added successfully" });
+      setIsDialogOpen(false);
+      form.reset({ userId, title: "", description: "", category: "", level: "", type: "", availability: "" });
+    },
+    onError: () => {
+      toast({ title: "Failed to add skill", variant: "destructive" });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...data }: any) => apiRequest("PUT", `/api/skills/${id}`, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/skills"] });
+      toast({ title: "Skill updated successfully" });
+      setIsDialogOpen(false);
+      setEditingSkill(null);
+      form.reset({ userId, title: "", description: "", category: "", level: "", type: "", availability: "" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update skill", variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiRequest("DELETE", `/api/skills/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/skills"] });
+      toast({ title: "Skill deleted" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete skill", variant: "destructive" });
+    },
+  });
+
+  const openDialog = (skill?: Skill) => {
     if (skill) {
       setEditingSkill(skill);
-      setFormData(skill);
+      form.reset({
+        userId: skill.userId,
+        title: skill.title,
+        description: skill.description,
+        category: skill.category,
+        level: skill.level,
+        type: skill.type,
+        availability: skill.availability || "",
+      });
     } else {
       setEditingSkill(null);
-      setFormData({
-        title: "",
-        description: "",
-        category: "",
-        level: "",
-        type: "",
-        availability: "",
-      });
+      form.reset({ userId, title: "", description: "", category: "", level: "", type: "", availability: "" });
     }
     setIsDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const onSubmit = (data: any) => {
     if (editingSkill) {
-      setSkills(skills.map(s => s.id === editingSkill.id ? { ...formData, id: editingSkill.id } : s));
-      toast({ title: "Skill updated successfully" });
+      updateMutation.mutate({ id: editingSkill.id, ...data });
     } else {
-      setSkills([...skills, { ...formData, id: Date.now().toString() }]);
-      toast({ title: "Skill added successfully" });
+      createMutation.mutate(data);
     }
-    setIsDialogOpen(false);
   };
 
   const handleDelete = (id: string) => {
-    setSkills(skills.filter(s => s.id !== id));
-    toast({ title: "Skill deleted" });
+    deleteMutation.mutate(id);
   };
 
   const filteredSkills = skills.filter(skill => {
@@ -156,7 +184,23 @@ export default function Skills() {
         </CardContent>
       </Card>
 
-      {filteredSkills.length === 0 ? (
+      {isLoading ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+            <p className="text-muted-foreground">Loading skills...</p>
+          </CardContent>
+        </Card>
+      ) : isError ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <p className="text-destructive mb-4">Failed to load skills: {error instanceof Error ? error.message : 'Unknown error'}</p>
+            <Button onClick={() => refetch()} variant="outline" data-testid="button-retry-skills">
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      ) : filteredSkills.length === 0 ? (
         <Card>
           <CardContent className="p-12 text-center">
             <p className="text-muted-foreground mb-4">No skills found. Add your first skill to get started!</p>
@@ -221,90 +265,147 @@ export default function Skills() {
               {editingSkill ? "Update the details of your skill" : "Add a skill you can teach or want to learn"}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Skill Title</Label>
-              <Input
-                id="title"
-                placeholder="e.g., Web Development, Guitar Playing"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                data-testid="input-skill-title"
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Skill Title</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="e.g., Web Development, Guitar Playing"
+                        {...field}
+                        data-testid="input-skill-title"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Describe what you can teach or what you want to learn..."
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={4}
-                data-testid="input-skill-description"
+              
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe what you can teach or what you want to learn..."
+                        rows={4}
+                        {...field}
+                        data-testid="input-skill-description"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="category">Category</Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-                  <SelectTrigger data-testid="select-skill-category">
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(cat => (
-                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="level">Level</Label>
-                <Select value={formData.level} onValueChange={(value) => setFormData({ ...formData, level: value })}>
-                  <SelectTrigger data-testid="select-skill-level">
-                    <SelectValue placeholder="Select level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {levels.map(level => (
-                      <SelectItem key={level} value={level}>{level}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="type">Type</Label>
-                <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                  <SelectTrigger data-testid="select-skill-type">
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {types.map(type => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="availability">Availability</Label>
-                <Input
-                  id="availability"
-                  placeholder="e.g., Weekends, Evenings"
-                  value={formData.availability}
-                  onChange={(e) => setFormData({ ...formData, availability: e.target.value })}
-                  data-testid="input-skill-availability"
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="category"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-skill-category">
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {categories.map(cat => (
+                            <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="level"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Level</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-skill-level">
+                            <SelectValue placeholder="Select level" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {levels.map(level => (
+                            <SelectItem key={level} value={level}>{level}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)} data-testid="button-cancel">
-              Cancel
-            </Button>
-            <Button onClick={handleSave} data-testid="button-save-skill">
-              {editingSkill ? "Update Skill" : "Add Skill"}
-            </Button>
-          </DialogFooter>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-skill-type">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {types.map(type => (
+                            <SelectItem key={type} value={type}>{type}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="availability"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Availability</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="e.g., Weekends, Evenings"
+                          {...field}
+                          data-testid="input-skill-availability"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              
+              <DialogFooter>
+                <Button variant="outline" type="button" onClick={() => setIsDialogOpen(false)} data-testid="button-cancel">
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending} data-testid="button-save-skill">
+                  {(createMutation.isPending || updateMutation.isPending) && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  {editingSkill ? "Update Skill" : "Add Skill"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </DialogContent>
       </Dialog>
     </div>

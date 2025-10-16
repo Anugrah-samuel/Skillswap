@@ -4,7 +4,7 @@
 SkillSwap is a professional skill exchange platform with a minimalist black and white design. Users can exchange skills, find learning partners, schedule sessions, and build a trusted community through ratings and reviews.
 
 ## Current Status
-**Phase:** Frontend Complete, Backend Implementation In Progress
+**Phase:** Backend Complete, Frontend-Backend Integration In Progress
 **Last Updated:** October 16, 2025
 
 ## Project Architecture
@@ -17,10 +17,12 @@ SkillSwap is a professional skill exchange platform with a minimalist black and 
 - **State Management:** TanStack Query v5
 - **Theme:** Dark/Light mode with black and white minimalist aesthetic
 
-### Backend (In Progress)
+### Backend (Complete)
 - **Framework:** Express.js
-- **Storage:** In-memory storage (MemStorage)
+- **Storage:** In-memory storage (MemStorage) - full CRUD for all entities
 - **Schema:** Drizzle ORM with PostgreSQL types
+- **Validation:** Zod schemas for all endpoints
+- **Security:** Protected fields, password exclusion, rating integrity (stored as integer * 10)
 
 ## Key Features Implemented
 
@@ -168,44 +170,48 @@ shared/
 └── schema.ts         # Complete data models
 ```
 
-## API Endpoints (To Be Implemented)
+## API Endpoints (Implemented)
 
 ### Authentication
-- POST /api/auth/signup
-- POST /api/auth/login
-- POST /api/auth/logout
+- ✅ POST /api/auth/signup - User registration with validation
+- ✅ POST /api/auth/login - User login (passwords never returned in responses)
+- ✅ GET /api/auth/me - Get current user
 
 ### Skills
-- GET /api/skills
-- POST /api/skills
-- PUT /api/skills/:id
-- DELETE /api/skills/:id
+- ✅ GET /api/skills?userId=:id - Get skills by user
+- ✅ POST /api/skills - Create skill with validation
+- ✅ PUT /api/skills/:id - Update skill (validated, only allowed fields)
+- ✅ DELETE /api/skills/:id - Delete skill
 
 ### Matches
-- GET /api/matches
-- POST /api/matches/request
-- PUT /api/matches/:id/status
+- ✅ GET /api/matches?userId=:id - Get user's matches
+- ✅ POST /api/matches - Create match request
+- ✅ PUT /api/matches/:id/status - Update match status (pending/accepted/rejected)
+- ✅ GET /api/matches/suggestions/:userId - Get match suggestions
 
 ### Messages
-- GET /api/messages/:conversationId
-- POST /api/messages
-- PUT /api/messages/:id/read
+- ✅ GET /api/messages?userId=:id&partnerId=:id - Get conversation messages
+- ✅ POST /api/messages - Send message (creates notification)
+- ✅ PUT /api/messages/:id/read - Mark message as read
 
 ### Events
-- GET /api/events
-- POST /api/events
-- PUT /api/events/:id
-- DELETE /api/events/:id
+- ✅ GET /api/events?userId=:id - Get user's events
+- ✅ POST /api/events - Create event (creates notification)
+- ✅ PUT /api/events/:id - Update event (validated, only allowed fields)
+- ✅ DELETE /api/events/:id - Delete event
 
 ### Profile
-- GET /api/profile/:userId
-- PUT /api/profile
-- GET /api/reviews/:userId
+- ✅ GET /api/profile/:userId - Get user profile
+- ✅ PUT /api/profile - Update profile (validated, protected fields excluded)
+- ✅ GET /api/reviews/:userId - Get user reviews
+
+### Reviews
+- ✅ POST /api/reviews - Create review (auto-updates user rating as integer * 10)
 
 ### Notifications
-- GET /api/notifications
-- PUT /api/notifications/:id/read
-- PUT /api/notifications/read-all
+- ✅ GET /api/notifications?userId=:id - Get user notifications
+- ✅ PUT /api/notifications/:id/read - Mark notification as read
+- ✅ PUT /api/notifications/read-all - Mark all as read
 
 ## Development Guidelines
 
@@ -222,12 +228,15 @@ shared/
 - Keep routes thin, logic in storage layer
 - Return proper error responses
 
-## Next Steps
+## Implementation Progress
 1. ✅ Complete frontend components
-2. ⏳ Implement backend API routes
-3. ⏳ Connect frontend to backend
-4. ⏳ Add error handling and loading states
-5. ⏳ Test all user journeys
+2. ✅ Implement backend API routes with validation
+3. ✅ Fix backend security (rating integrity, field protection, password exclusion)
+4. ✅ Integrate auth pages (signup, login) with backend
+5. ✅ Integrate Skills page with react-hook-form + API
+6. ⏳ Integrate remaining dashboard pages (Discover, Chat, Calendar, Profile)
+7. ⏳ Add comprehensive error handling and loading states
+8. ⏳ Test all critical user journeys with e2e tests
 
 ## User Preferences
 - Minimalist black and white design

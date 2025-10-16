@@ -6,96 +6,93 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Star, Send } from "lucide-react";
+import { Search, Star, Send, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import avatar1 from "@assets/generated_images/Female_professional_avatar_4d4900f0.png";
-import avatar2 from "@assets/generated_images/Male_professional_avatar_492df590.png";
-import avatar3 from "@assets/generated_images/Experienced_professional_avatar_13ef1d1a.png";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 
 const categories = ["All", "Technology", "Design", "Business", "Languages", "Arts", "Fitness"];
+
+interface MatchSuggestion {
+  user: {
+    id: string;
+    fullName: string;
+    bio?: string;
+    avatarUrl?: string;
+    rating: number;
+    totalReviews: number;
+  };
+  teachingSkill: {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    level: string;
+    availability?: string;
+  };
+  learningSkill: {
+    id: string;
+    title: string;
+    description: string;
+    category: string;
+    level: string;
+    type: string;
+  };
+  matchScore: number;
+}
 
 export default function Discover() {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("All");
-  const [selectedMatch, setSelectedMatch] = useState<any>(null);
+  const [selectedMatch, setSelectedMatch] = useState<MatchSuggestion | null>(null);
 
-  const matches = [
-    {
-      id: "1",
-      name: "Sarah Chen",
-      avatar: avatar1,
-      bio: "Full-stack developer passionate about teaching web development",
-      skill: "Web Development",
-      skillDescription: "React, Node.js, TypeScript, and modern web technologies",
-      wantsToLearn: "Graphic Design",
-      category: "Technology",
-      level: "Advanced",
-      rating: 4.9,
-      totalReviews: 24,
-      matchScore: 95,
-      availability: "Weekends",
-    },
-    {
-      id: "2",
-      name: "Michael Ross",
-      avatar: avatar2,
-      bio: "Professional photographer with 10 years of experience",
-      skill: "Photography",
-      skillDescription: "Portrait, landscape, and product photography techniques",
-      wantsToLearn: "Video Editing",
-      category: "Arts",
-      level: "Expert",
-      rating: 4.7,
-      totalReviews: 18,
-      matchScore: 88,
-      availability: "Evenings",
-    },
-    {
-      id: "3",
-      name: "Emily Davis",
-      avatar: avatar3,
-      bio: "Content strategist and creative writer",
-      skill: "Content Writing",
-      skillDescription: "Blog posts, copywriting, and content strategy",
-      wantsToLearn: "Social Media Marketing",
-      category: "Business",
-      level: "Intermediate",
-      rating: 5.0,
-      totalReviews: 31,
-      matchScore: 92,
-      availability: "Flexible",
-    },
-    {
-      id: "4",
-      name: "Carlos Rodriguez",
-      avatar: avatar2,
-      bio: "Native Spanish speaker and certified language instructor",
-      skill: "Spanish Language",
-      skillDescription: "Conversational Spanish, grammar, and cultural insights",
-      wantsToLearn: "English Language",
-      category: "Languages",
-      level: "Expert",
-      rating: 4.8,
-      totalReviews: 42,
-      matchScore: 85,
-      availability: "Mornings",
-    },
-  ];
+  // TODO: Replace with actual user ID from auth context
+  const userId = "user-1";
 
-  const filteredMatches = matches.filter(match => {
-    const matchesSearch = match.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      match.skill.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = filterCategory === "All" || match.category === filterCategory;
+  const { data: suggestions = [], isLoading, isError, error, refetch } = useQuery<MatchSuggestion[]>({
+    queryKey: ["/api/matches/suggestions", userId],
+    queryFn: async () => {
+      const response = await fetch(`/api/matches/suggestions/${userId}`);
+      if (!response.ok) throw new Error("Failed to fetch match suggestions");
+      return response.json();
+    },
+  });
+
+  const requestTradeMutation = useMutation({
+    mutationFn: (data: any) => apiRequest("POST", "/api/matches", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/matches"] });
+      toast({
+        title: "Request sent!",
+        description: `Your skill trade request has been sent.`,
+      });
+      setSelectedMatch(null);
+    },
+    onError: () => {
+      toast({
+        title: "Failed to send request",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const filteredMatches = suggestions.filter(match => {
+    const matchesSearch = match.user.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      match.teachingSkill.title.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCategory = filterCategory === "All" || match.teachingSkill.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
 
   const handleRequestTrade = () => {
-    toast({
-      title: "Request sent!",
-      description: `Your skill trade request has been sent to ${selectedMatch.name}.`,
+    if (!selectedMatch) return;
+    requestTradeMutation.mutate({
+      userId,
+      matchedUserId: selectedMatch.user.id,
+      userSkillId: selectedMatch.learningSkill.id,
+      matchedSkillId: selectedMatch.teachingSkill.id,
+      status: "pending",
     });
-    setSelectedMatch(null);
   };
 
   return (
@@ -134,93 +131,122 @@ export default function Discover() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredMatches.map((match) => (
-          <Card key={match.id} className="hover-elevate transition-all" data-testid={`match-card-${match.id}`}>
-            <CardHeader className="pb-3">
-              <div className="flex items-start gap-4 mb-3">
-                <Avatar className="h-16 w-16">
-                  <AvatarImage src={match.avatar} />
-                  <AvatarFallback>{match.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-xl mb-1">{match.name}</CardTitle>
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="flex items-center gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-3 w-3 ${i < Math.floor(match.rating) ? 'fill-current' : 'text-muted'}`}
-                        />
-                      ))}
+      {isLoading ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-muted-foreground" />
+            <p className="text-muted-foreground">Finding matches...</p>
+          </CardContent>
+        </Card>
+      ) : isError ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <p className="text-destructive mb-4">Failed to load matches: {error instanceof Error ? error.message : 'Unknown error'}</p>
+            <Button onClick={() => refetch()} variant="outline" data-testid="button-retry-matches">
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      ) : filteredMatches.length === 0 ? (
+        <Card>
+          <CardContent className="p-12 text-center">
+            <p className="text-muted-foreground">No matches found. Try adjusting your filters or add more skills to your profile.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredMatches.map((match, idx) => {
+            const rating = (match.user.rating || 0) / 10;
+            return (
+              <Card key={idx} className="hover-elevate transition-all" data-testid={`match-card-${idx}`}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-start gap-4 mb-3">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={match.user.avatarUrl} />
+                      <AvatarFallback>{match.user.fullName?.split(' ').map((n: string) => n[0]).join('') || 'U'}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-xl mb-1">{match.user.fullName}</CardTitle>
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-3 w-3 ${i < Math.floor(rating) ? 'fill-current' : 'text-muted'}`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {rating.toFixed(1)} ({match.user.totalReviews || 0})
+                        </span>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {match.matchScore}% Match
+                      </Badge>
                     </div>
-                    <span className="text-sm text-muted-foreground">
-                      {match.rating} ({match.totalReviews})
-                    </span>
                   </div>
-                  <Badge variant="secondary" className="text-xs">
-                    {match.matchScore}% Match
-                  </Badge>
-                </div>
-              </div>
-              <CardDescription className="line-clamp-2">{match.bio}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <p className="text-sm font-medium mb-1">Can Teach:</p>
-                <p className="text-sm text-foreground font-semibold mb-1">{match.skill}</p>
-                <p className="text-sm text-muted-foreground line-clamp-2">{match.skillDescription}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium mb-1">Wants to Learn:</p>
-                <p className="text-sm text-foreground font-semibold">{match.wantsToLearn}</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline">{match.category}</Badge>
-                <Badge variant="outline">{match.level}</Badge>
-                <Badge variant="outline">{match.availability}</Badge>
-              </div>
-              <Button
-                className="w-full"
-                onClick={() => setSelectedMatch(match)}
-                data-testid={`button-request-trade-${match.id}`}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Request Trade
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                  <CardDescription className="line-clamp-2">{match.user.bio || "No bio available"}</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="text-sm font-medium mb-1">Can Teach:</p>
+                    <p className="text-sm text-foreground font-semibold mb-1">{match.teachingSkill.title}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-2">{match.teachingSkill.description}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium mb-1">Wants to Learn:</p>
+                    <p className="text-sm text-foreground font-semibold">{match.learningSkill.title}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="outline">{match.teachingSkill.category}</Badge>
+                    <Badge variant="outline">{match.teachingSkill.level}</Badge>
+                    {match.teachingSkill.availability && (
+                      <Badge variant="outline">{match.teachingSkill.availability}</Badge>
+                    )}
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={() => setSelectedMatch(match)}
+                    data-testid={`button-request-trade-${idx}`}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Request Trade
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       <Dialog open={!!selectedMatch} onOpenChange={() => setSelectedMatch(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Request Skill Trade</DialogTitle>
             <DialogDescription>
-              Send a skill exchange request to {selectedMatch?.name}
+              Send a skill exchange request to {selectedMatch?.user.fullName}
             </DialogDescription>
           </DialogHeader>
           {selectedMatch && (
             <div className="space-y-4">
               <div className="flex items-center gap-4 p-4 rounded-lg bg-muted">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={selectedMatch.avatar} />
-                  <AvatarFallback>{selectedMatch.name.split(' ').map((n: string) => n[0]).join('')}</AvatarFallback>
+                  <AvatarImage src={selectedMatch.user.avatarUrl} />
+                  <AvatarFallback>{selectedMatch.user.fullName?.split(' ').map((n: string) => n[0]).join('') || 'U'}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
-                  <p className="font-semibold">{selectedMatch.name}</p>
-                  <p className="text-sm text-muted-foreground">Teaches {selectedMatch.skill}</p>
+                  <p className="font-semibold">{selectedMatch.user.fullName}</p>
+                  <p className="text-sm text-muted-foreground">Teaches {selectedMatch.teachingSkill.title}</p>
                 </div>
               </div>
               <div className="space-y-2 text-sm">
                 <p>
                   <span className="font-medium">You will teach:</span>{" "}
-                  <span className="text-muted-foreground">{selectedMatch.wantsToLearn}</span>
+                  <span className="text-muted-foreground">{selectedMatch.learningSkill.title}</span>
                 </p>
                 <p>
                   <span className="font-medium">You will learn:</span>{" "}
-                  <span className="text-muted-foreground">{selectedMatch.skill}</span>
+                  <span className="text-muted-foreground">{selectedMatch.teachingSkill.title}</span>
                 </p>
               </div>
             </div>
@@ -229,7 +255,12 @@ export default function Discover() {
             <Button variant="outline" onClick={() => setSelectedMatch(null)} data-testid="button-cancel-request">
               Cancel
             </Button>
-            <Button onClick={handleRequestTrade} data-testid="button-confirm-request">
+            <Button 
+              onClick={handleRequestTrade} 
+              disabled={requestTradeMutation.isPending}
+              data-testid="button-confirm-request"
+            >
+              {requestTradeMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Send Request
             </Button>
           </DialogFooter>
