@@ -6,48 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useState } from "react";
 
 export function NotificationsDropdown() {
-  const [notifications, setNotifications] = useState([
-    {
-      id: "1",
-      type: "match",
-      title: "New Match Found!",
-      message: "Sarah Chen is a great match for your React skills",
-      time: "5m ago",
-      read: false,
-    },
-    {
-      id: "2",
-      type: "message",
-      title: "New Message",
-      message: "Michael Ross sent you a message",
-      time: "1h ago",
-      read: false,
-    },
-    {
-      id: "3",
-      type: "request",
-      title: "Skill Trade Request",
-      message: "Emily Davis wants to learn from you",
-      time: "2h ago",
-      read: false,
-    },
-    {
-      id: "4",
-      type: "reminder",
-      title: "Session Reminder",
-      message: "Your session with Sarah starts in 1 hour",
-      time: "3h ago",
-      read: true,
-    },
-    {
-      id: "5",
-      type: "review",
-      title: "New Review",
-      message: "You received a 5-star review from Michael",
-      time: "1d ago",
-      read: true,
-    },
-  ]);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

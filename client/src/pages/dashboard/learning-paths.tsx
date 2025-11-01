@@ -15,49 +15,8 @@ export default function LearningPaths() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Mock data for learning paths
-  const learningPaths = [
-    {
-      id: "1",
-      title: "Full-Stack Web Development",
-      description: "Master modern web development with React, Node.js, and PostgreSQL",
-      skill: "Web Development",
-      progress: 65,
-      estimatedTime: "12 weeks",
-      topics: [
-        { id: "1", title: "HTML & CSS Fundamentals", completed: true },
-        { id: "2", title: "JavaScript Basics", completed: true },
-        { id: "3", title: "React Components", completed: true },
-        { id: "4", title: "State Management", completed: false },
-        { id: "5", title: "API Integration", completed: false },
-        { id: "6", title: "Database Design", completed: false },
-      ],
-      resources: [
-        { id: "1", title: "MDN Web Docs", type: "Documentation" },
-        { id: "2", title: "React Official Tutorial", type: "Tutorial" },
-        { id: "3", title: "Full-Stack Project", type: "Project" },
-      ],
-    },
-    {
-      id: "2",
-      title: "UI/UX Design Principles",
-      description: "Learn design thinking, user research, and interface design",
-      skill: "UI/UX Design",
-      progress: 30,
-      estimatedTime: "8 weeks",
-      topics: [
-        { id: "1", title: "Design Thinking", completed: true },
-        { id: "2", title: "User Research Methods", completed: true },
-        { id: "3", title: "Wireframing", completed: false },
-        { id: "4", title: "Prototyping", completed: false },
-        { id: "5", title: "Visual Design", completed: false },
-      ],
-      resources: [
-        { id: "1", title: "Don't Make Me Think", type: "Book" },
-        { id: "2", title: "Figma Tutorial Series", type: "Video" },
-      ],
-    },
-  ];
+  // Learning paths will be loaded from API
+  const learningPaths: any[] = [];
 
   const handleCreatePath = () => {
     toast({ title: "Learning path created successfully" });
@@ -191,14 +150,14 @@ export default function LearningPaths() {
               <Label htmlFor="skill">Skill to Learn</Label>
               <Input
                 id="skill"
-                placeholder="e.g., Python Programming, Digital Marketing, etc."
+                placeholder="Skill to Learn"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="goal">Learning Goal</Label>
               <Textarea
                 id="goal"
-                placeholder="What do you want to achieve with this skill? Be specific about your goals."
+                placeholder="Learning Goals"
                 rows={3}
               />
             </div>
@@ -206,7 +165,7 @@ export default function LearningPaths() {
               <Label htmlFor="timeline">Timeline</Label>
               <Input
                 id="timeline"
-                placeholder="e.g., 3 months, 6 weeks, etc."
+                placeholder="Timeline"
               />
             </div>
             <div className="space-y-2">

@@ -15,42 +15,8 @@ export default function Projects() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Mock data for projects
-  const projects = [
-    {
-      id: "1",
-      title: "E-commerce Website",
-      description: "Building a full-featured e-commerce platform with React and Node.js",
-      category: "Web Development",
-      status: "In Progress",
-      members: 4,
-      memberAvatars: ["", "", ""],
-      progress: 65,
-      deadline: "2 weeks",
-    },
-    {
-      id: "2",
-      title: "Mobile App Design",
-      description: "Designing a fitness tracking mobile application with Figma",
-      category: "Design",
-      status: "Planning",
-      members: 3,
-      memberAvatars: ["", "", ""],
-      progress: 15,
-      deadline: "1 month",
-    },
-    {
-      id: "3",
-      title: "Data Analysis Dashboard",
-      description: "Creating a dashboard to visualize business metrics with Python and D3.js",
-      category: "Data Science",
-      status: "Completed",
-      members: 2,
-      memberAvatars: ["", ""],
-      progress: 100,
-      deadline: "Done",
-    },
-  ];
+  // Projects will be loaded from API
+  const projects: any[] = [];
 
   const handleCreateProject = () => {
     toast({ title: "Project created successfully" });
@@ -172,21 +138,21 @@ export default function Projects() {
               <Label htmlFor="projectName">Project Name</Label>
               <Input
                 id="projectName"
-                placeholder="e.g., Portfolio Website, Mobile App, Data Dashboard, etc."
+                placeholder="Project Name"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <Input
                 id="category"
-                placeholder="e.g., Web Development, Design, Data Science, etc."
+                placeholder="Category"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Project Description</Label>
               <Textarea
                 id="description"
-                placeholder="Describe your project, its goals, and what skills it will help develop"
+                placeholder="Project Description"
                 rows={3}
               />
             </div>
@@ -194,14 +160,14 @@ export default function Projects() {
               <Label htmlFor="skills">Required Skills</Label>
               <Input
                 id="skills"
-                placeholder="e.g., React, UI/UX Design, Python, etc."
+                placeholder="Required Skills"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="team">Team Members</Label>
               <Input
                 id="team"
-                placeholder="Add collaborators by username or email"
+                placeholder="Team Members"
               />
             </div>
             <div className="space-y-2">

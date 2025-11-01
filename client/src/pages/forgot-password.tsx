@@ -59,7 +59,7 @@ export default function ForgotPassword() {
                     <FormItem>
                       <FormLabel>Email Address</FormLabel>
                       <FormControl>
-                        <Input type="email" placeholder="john@example.com" {...field} data-testid="input-email" />
+                        <Input type="email" placeholder="Email Address" {...field} data-testid="input-email" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

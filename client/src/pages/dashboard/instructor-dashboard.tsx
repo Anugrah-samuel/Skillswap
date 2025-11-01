@@ -8,22 +8,9 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { BookOpen, Users, IndianRupee, TrendingUp, Eye, Play } from "lucide-react";
 import { mockCourseApi, type Course, type Purchase, type Enrollment } from "@/lib/mockCourseApi";
 
-// Mock data for charts
-const salesData = [
-  { name: 'Jan', sales: 4000 },
-  { name: 'Feb', sales: 3000 },
-  { name: 'Mar', sales: 2000 },
-  { name: 'Apr', sales: 2780 },
-  { name: 'May', sales: 1890 },
-  { name: 'Jun', sales: 2390 },
-];
-
-const categoryData = [
-  { name: 'Technology', value: 400 },
-  { name: 'Design', value: 300 },
-  { name: 'Business', value: 300 },
-  { name: 'Languages', value: 200 },
-];
+// Chart data will be loaded from API
+const salesData: any[] = [];
+const categoryData: any[] = [];
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -42,12 +29,12 @@ export default function InstructorDashboard() {
 
   const loadData = () => {
     // Get courses for this instructor
-    const instructorCourses = mockCourseApi.getCoursesByInstructor("user-1"); // TODO: Replace with actual user ID
+    const instructorCourses = mockCourseApi.getCoursesByInstructor(""); // User ID will be loaded from auth
     setCourses(instructorCourses);
     setTotalCourses(instructorCourses.length);
 
     // Get purchases for this instructor's courses
-    const instructorPurchases = mockCourseApi.getPurchasesByInstructor("user-1");
+    const instructorPurchases = mockCourseApi.getPurchasesByInstructor(""); // User ID will be loaded from auth
     setPurchases(instructorPurchases);
 
     // Calculate total earnings (80% of purchase amounts)

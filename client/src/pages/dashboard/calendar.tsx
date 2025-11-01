@@ -23,41 +23,7 @@ export default function Calendar() {
     description: "",
   });
 
-  const [events, setEvents] = useState([
-    {
-      id: "1",
-      title: "React Fundamentals Session",
-      partner: "Sarah Chen",
-      skill: "Web Development",
-      date: "2024-10-20",
-      time: "14:00",
-      duration: "2 hours",
-      description: "Introduction to React hooks and state management",
-      status: "upcoming",
-    },
-    {
-      id: "2",
-      title: "Design Principles Workshop",
-      partner: "Sarah Chen",
-      skill: "Graphic Design",
-      date: "2024-10-22",
-      time: "10:00",
-      duration: "1.5 hours",
-      description: "Learning color theory and typography basics",
-      status: "upcoming",
-    },
-    {
-      id: "3",
-      title: "Photography Basics",
-      partner: "Michael Ross",
-      skill: "Photography",
-      date: "2024-10-18",
-      time: "16:00",
-      duration: "2 hours",
-      description: "Camera settings and composition techniques",
-      status: "completed",
-    },
-  ]);
+  const [events, setEvents] = useState<any[]>([]);
 
   const openDialog = (event?: any) => {
     if (event) {
@@ -250,7 +216,7 @@ export default function Calendar() {
               <Label htmlFor="title">Session Title</Label>
               <Input
                 id="title"
-                placeholder="e.g., React Fundamentals Session"
+                placeholder="Session Title"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 data-testid="input-event-title"
@@ -303,7 +269,7 @@ export default function Calendar() {
                 <Label htmlFor="duration">Duration</Label>
                 <Input
                   id="duration"
-                  placeholder="e.g., 2 hours"
+                  placeholder="Duration"
                   value={formData.duration}
                   onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                   data-testid="input-event-duration"

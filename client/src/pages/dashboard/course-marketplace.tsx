@@ -76,7 +76,7 @@ export default function CourseMarketplace() {
   };
 
   const loadEnrollments = () => {
-    const userEnrollments = mockCourseApi.getEnrollmentsByUser("user-1"); // TODO: Replace with actual user ID
+    const userEnrollments = mockCourseApi.getEnrollmentsByUser(""); // User ID will be loaded from auth
     setEnrollments(userEnrollments);
   };
 
@@ -108,7 +108,7 @@ export default function CourseMarketplace() {
 
     // Mock purchase process
     try {
-      mockCourseApi.purchaseCourse("user-1", selectedCourse.id, selectedCourse.price, selectedCourse.currency);
+      mockCourseApi.purchaseCourse("", selectedCourse.id, selectedCourse.price, selectedCourse.currency); // User ID will be loaded from auth
       toast({ title: "Course purchased successfully!" });
       setIsPurchaseDialogOpen(false);
       loadEnrollments();

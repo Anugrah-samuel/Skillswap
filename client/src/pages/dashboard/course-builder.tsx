@@ -69,7 +69,7 @@ export default function CourseBuilder() {
   }, [selectedCourse]);
 
   const loadCourses = () => {
-    const userCourses = mockCourseApi.getCoursesByInstructor("user-1"); // TODO: Replace with actual user ID
+    const userCourses = mockCourseApi.getCoursesByInstructor(""); // User ID will be loaded from auth
     setCourses(userCourses);
   };
 
@@ -119,8 +119,8 @@ export default function CourseBuilder() {
       price: parseFloat(courseForm.price) || 0,
       currency: courseForm.currency as "INR" | "credits",
       duration: courseForm.duration,
-      instructorId: "user-1", // TODO: Replace with actual user ID
-      instructorName: "Alex Morgan", // TODO: Replace with actual user name
+      instructorId: "", // User ID will be loaded from auth
+      instructorName: "", // User name will be loaded from auth
       lessons: [],
       resources: [],
       previewLessonId: null
@@ -599,7 +599,7 @@ export default function CourseBuilder() {
                 id="course-title"
                 value={courseForm.title}
                 onChange={(e) => setCourseForm({...courseForm, title: e.target.value})}
-                placeholder="e.g., React Fundamentals"
+                placeholder="Course Title"
               />
             </div>
             <div className="space-y-2">
@@ -632,7 +632,7 @@ export default function CourseBuilder() {
                   id="course-duration"
                   value={courseForm.duration}
                   onChange={(e) => setCourseForm({...courseForm, duration: e.target.value})}
-                  placeholder="e.g., 4 weeks, 10 hours"
+                  placeholder="Duration"
                 />
               </div>
             </div>
@@ -691,7 +691,7 @@ export default function CourseBuilder() {
                 id="lesson-title"
                 value={lessonForm.title}
                 onChange={(e) => setLessonForm({...lessonForm, title: e.target.value})}
-                placeholder="e.g., Introduction to Components"
+                placeholder="Lesson Title"
               />
             </div>
             <div className="space-y-2">
@@ -711,7 +711,7 @@ export default function CourseBuilder() {
                   id="lesson-video"
                   value={lessonForm.videoUrl}
                   onChange={(e) => setLessonForm({...lessonForm, videoUrl: e.target.value})}
-                  placeholder="https://example.com/video.mp4"
+                  placeholder="Video URL"
                 />
                 <Button variant="outline" size="icon">
                   <Upload className="h-4 w-4" />
@@ -767,7 +767,7 @@ export default function CourseBuilder() {
                 id="resource-title"
                 value={resourceForm.title}
                 onChange={(e) => setResourceForm({...resourceForm, title: e.target.value})}
-                placeholder="e.g., Course Slides, Code Examples"
+                placeholder="Resource Title"
               />
             </div>
             <div className="space-y-2">
@@ -777,7 +777,7 @@ export default function CourseBuilder() {
                   id="resource-url"
                   value={resourceForm.url}
                   onChange={(e) => setResourceForm({...resourceForm, url: e.target.value})}
-                  placeholder="https://example.com/resource.pdf"
+                  placeholder="Resource URL"
                 />
                 <Button variant="outline" size="icon">
                   <Upload className="h-4 w-4" />

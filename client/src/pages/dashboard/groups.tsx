@@ -15,39 +15,8 @@ export default function Groups() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Mock data for groups
-  const groups = [
-    {
-      id: "1",
-      name: "React Developers Circle",
-      description: "A group for React developers to share knowledge, collaborate on projects, and learn together.",
-      members: 12,
-      category: "Web Development",
-      nextMeeting: "Tomorrow, 7:00 PM",
-      memberAvatars: ["", "", ""],
-      rating: 4.8,
-    },
-    {
-      id: "2",
-      name: "Design Thinkers",
-      description: "Exploring design thinking methodologies and applying them to real-world challenges.",
-      members: 8,
-      category: "Design",
-      nextMeeting: "Wed, 6:00 PM",
-      memberAvatars: ["", "", ""],
-      rating: 4.9,
-    },
-    {
-      id: "3",
-      name: "Language Exchange Circle",
-      description: "Practice languages with native speakers and learn about different cultures.",
-      members: 15,
-      category: "Languages",
-      nextMeeting: "Sat, 10:00 AM",
-      memberAvatars: ["", "", ""],
-      rating: 4.7,
-    },
-  ];
+  // Groups will be loaded from API
+  const groups: any[] = [];
 
   const handleCreateGroup = () => {
     toast({ title: "Group created successfully" });
@@ -147,21 +116,21 @@ export default function Groups() {
               <Label htmlFor="groupName">Group Name</Label>
               <Input
                 id="groupName"
-                placeholder="e.g., JavaScript Study Group, Photography Circle, etc."
+                placeholder="Group Name"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
               <Input
                 id="category"
-                placeholder="e.g., Web Development, Design, Languages, etc."
+                placeholder="Category"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
-                placeholder="Describe your group's purpose, goals, and what members will learn"
+                placeholder="Group Description"
                 rows={3}
               />
             </div>
@@ -169,7 +138,7 @@ export default function Groups() {
               <Label htmlFor="goals">Learning Goals</Label>
               <Textarea
                 id="goals"
-                placeholder="What will members achieve by participating in this circle?"
+                placeholder="Group Goals"
                 rows={2}
               />
             </div>
@@ -177,7 +146,7 @@ export default function Groups() {
               <Label htmlFor="meeting">Meeting Schedule</Label>
               <Input
                 id="meeting"
-                placeholder="e.g., Weekly on Tuesdays, 7:00 PM"
+                placeholder="Meeting Schedule"
               />
             </div>
           </div>

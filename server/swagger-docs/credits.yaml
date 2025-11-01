@@ -1,0 +1,110 @@
+paths:
+  /api/credits/balance:
+    get:
+      tags:
+        - Credits
+      summary: Get user credit balance
+      description: Retrieve the current credit balance for the authenticated user
+      responses:
+        '200':
+          description: Credit balance retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: integer
+                    minimum: 0
+                    example: 150
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/credits/purchase:
+    post:
+      tags:
+        - Credits
+      summary: Purchase credits
+      description: Purchase credits using a payment method
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - paymentMethodId
+              properties:
+                amount:
+                  type: integer
+                  minimum: 1
+                  maximum: 10000
+                  example: 100
+                  description: Number of credits to purchase
+                paymentMethodId:
+                  type: string
+                  format: uuid
+                  example: "pm_1234567890"
+                  description: Stripe payment method ID
+      responses:
+        '201':
+          description: Credits purchased successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transaction:
+                    $ref: '#/components/schemas/CreditTransaction'
+                  newBalance:
+                    type: integer
+                    example: 250
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/credits/transactions:
+    get:
+      tags:
+        - Credits
+      summary: Get transaction history
+      description: Retrieve credit transaction history for the authenticated user
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of transactions to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+            example: 20
+      responses:
+        '200':
+          description: Transaction history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transactions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CreditTransaction'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'

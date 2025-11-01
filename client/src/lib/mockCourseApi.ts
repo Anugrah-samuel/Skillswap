@@ -316,45 +316,4 @@ export const mockCourseApi = {
   }
 };
 
-// Initialize with some sample data if localStorage is empty
-const initializeSampleData = () => {
-  const courses = mockCourseApi.getCourses();
-  if (courses.length === 0) {
-    // Add some sample courses
-    const sampleCourses: Omit<Course, 'id' | 'createdAt' | 'updatedAt' | 'enrolledCount' | 'rating' | 'totalReviews'>[] = [
-      {
-        title: "React Fundamentals",
-        description: "Learn the basics of React including components, props, state, and hooks.",
-        category: "Technology",
-        price: 499,
-        currency: "INR",
-        duration: "4 weeks",
-        instructorId: "user-1",
-        instructorName: "Alex Morgan",
-        lessons: [],
-        resources: [],
-        previewLessonId: null
-      },
-      {
-        title: "UI/UX Design Principles",
-        description: "Master the fundamentals of user interface and user experience design.",
-        category: "Design",
-        price: 799,
-        currency: "INR",
-        duration: "6 weeks",
-        instructorId: "user-2",
-        instructorName: "Sarah Chen",
-        lessons: [],
-        resources: [],
-        previewLessonId: null
-      }
-    ];
-
-    sampleCourses.forEach(course => {
-      mockCourseApi.createCourse(course);
-    });
-  }
-};
-
-// Initialize sample data
-initializeSampleData();
+// Note: Sample data initialization removed - courses will be empty initially

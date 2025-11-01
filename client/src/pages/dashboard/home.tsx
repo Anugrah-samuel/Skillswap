@@ -7,63 +7,19 @@ import { Link } from "wouter";
 
 export default function DashboardHome() {
   const stats = [
-    { label: "Active Matches", value: "8", icon: Users, color: "text-chart-1" },
-    { label: "Pending Requests", value: "3", icon: Clock, color: "text-chart-2" },
-    { label: "Completed Exchanges", value: "12", icon: CheckCircle, color: "text-chart-3" },
-    { label: "Your Rating", value: "4.8", icon: Star, color: "text-chart-4" },
+    { label: "Active Matches", value: "0", icon: Users, color: "text-chart-1" },
+    { label: "Pending Requests", value: "0", icon: Clock, color: "text-chart-2" },
+    { label: "Completed Exchanges", value: "0", icon: CheckCircle, color: "text-chart-3" },
+    { label: "Your Rating", value: "0", icon: Star, color: "text-chart-4" },
   ];
 
-  const latestMatches = [
-    {
-      id: "1",
-      name: "Sarah Chen",
-      avatar: "",
-      skill: "Web Development",
-      wantsToLearn: "Graphic Design",
-      rating: 4.9,
-      matchScore: 95,
-    },
-    {
-      id: "2",
-      name: "Michael Ross",
-      avatar: "",
-      skill: "Photography",
-      wantsToLearn: "Video Editing",
-      rating: 4.7,
-      matchScore: 88,
-    },
-    {
-      id: "3",
-      name: "Emily Davis",
-      avatar: "",
-      skill: "Content Writing",
-      wantsToLearn: "Social Media Marketing",
-      rating: 5.0,
-      matchScore: 92,
-    },
-  ];
-
-  const pendingRequests = [
-    {
-      id: "1",
-      from: "James Wilson",
-      skill: "Spanish Language",
-      status: "pending",
-      time: "2 hours ago",
-    },
-    {
-      id: "2",
-      from: "Lisa Anderson",
-      skill: "Yoga Instruction",
-      status: "pending",
-      time: "5 hours ago",
-    },
-  ];
+  const latestMatches: any[] = [];
+  const pendingRequests: any[] = [];
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold mb-2">Welcome back, Alex!</h1>
+        <h1 className="text-4xl font-bold mb-2">Welcome back!</h1>
         <p className="text-muted-foreground text-lg">
           Here's what's happening with your skill exchanges
         </p>

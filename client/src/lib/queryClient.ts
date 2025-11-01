@@ -2,9 +2,42 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
+    // Handle 401 Unauthorized - token expired or invalid
+    if (res.status === 401) {
+      // Clear stored tokens
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      
+      // Redirect to login
+      window.location.href = '/login';
+      throw new Error('Session expired. Please log in again.');
+    }
+    
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }
+}
+
+// Get auth token from localStorage
+function getAuthToken(): string | null {
+  return localStorage.getItem('accessToken');
+}
+
+// Create headers with auth token if available
+function createHeaders(includeContentType: boolean = false): HeadersInit {
+  const headers: HeadersInit = {};
+  
+  if (includeContentType) {
+    headers['Content-Type'] = 'application/json';
+  }
+  
+  const token = getAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
 }
 
 export async function apiRequest(
@@ -14,9 +47,8 @@ export async function apiRequest(
 ): Promise<Response> {
   const res = await fetch(url, {
     method,
-    headers: data ? { "Content-Type": "application/json" } : {},
+    headers: createHeaders(!!data),
     body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
   });
 
   await throwIfResNotOk(res);
@@ -30,7 +62,7 @@ export const getQueryFn: <T>(options: {
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
     const res = await fetch(queryKey.join("/") as string, {
-      credentials: "include",
+      headers: createHeaders(),
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

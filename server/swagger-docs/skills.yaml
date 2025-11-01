@@ -1,0 +1,192 @@
+paths:
+  /api/skills:
+    get:
+      tags:
+        - Skills
+      summary: Get user skills
+      description: Retrieve all skills for a specific user
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: User ID to get skills for
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        '200':
+          description: Skills retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Skill'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+      security: []
+
+    post:
+      tags:
+        - Skills
+      summary: Create a new skill
+      description: Add a new skill that you can teach or want to learn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - description
+                - category
+                - level
+                - type
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  example: "React Development"
+                  description: "Name of the skill"
+                description:
+                  type: string
+                  minLength: 10
+                  maxLength: 2000
+                  example: "Frontend development using React hooks and modern patterns"
+                  description: "Detailed description of what you can teach or want to learn"
+                category:
+                  type: string
+                  enum: ["Technology", "Design", "Business", "Languages", "Arts", "Fitness", "Music", "Cooking"]
+                  example: "Technology"
+                  description: "Category the skill belongs to"
+                level:
+                  type: string
+                  enum: ["Beginner", "Intermediate", "Advanced", "Expert"]
+                  example: "Intermediate"
+                  description: "Your proficiency level in this skill"
+                type:
+                  type: string
+                  enum: ["Teaching", "Learning"]
+                  example: "Teaching"
+                  description: "Whether you want to teach this skill or learn it"
+                availability:
+                  type: string
+                  maxLength: 100
+                  example: "Weekends, Evenings"
+                  description: "When you're available for this skill (optional)"
+      responses:
+        '201':
+          description: Skill created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Skill'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/skills/{id}:
+    put:
+      tags:
+        - Skills
+      summary: Update a skill
+      description: Update an existing skill (only your own skills)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Skill ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  example: "Advanced React Development"
+                description:
+                  type: string
+                  minLength: 10
+                  maxLength: 2000
+                  example: "Advanced React patterns including hooks, context, and performance optimization"
+                category:
+                  type: string
+                  enum: ["Technology", "Design", "Business", "Languages", "Arts", "Fitness", "Music", "Cooking"]
+                  example: "Technology"
+                level:
+                  type: string
+                  enum: ["Beginner", "Intermediate", "Advanced", "Expert"]
+                  example: "Advanced"
+                type:
+                  type: string
+                  enum: ["Teaching", "Learning"]
+                  example: "Teaching"
+                availability:
+                  type: string
+                  maxLength: 100
+                  example: "Weekends, Evenings after 6 PM"
+      responses:
+        '200':
+          description: Skill updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Skill'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Skills
+      summary: Delete a skill
+      description: Delete an existing skill (only your own skills)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Skill ID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Skill deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Skill deleted successfully"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'

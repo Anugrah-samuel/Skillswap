@@ -1,0 +1,356 @@
+paths:
+  /api/recommendations/skills:
+    get:
+      tags:
+        - Recommendations
+      summary: Get skill recommendations
+      description: Get personalized skill recommendations based on user activity and preferences
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of recommendations to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+            example: 10
+      responses:
+        '200':
+          description: Skill recommendations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Recommendation'
+                  message:
+                    type: string
+                    example: "Skill recommendations retrieved successfully"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/recommendations/users:
+    get:
+      tags:
+        - Recommendations
+      summary: Get user recommendations
+      description: Get recommended users for skill exchange based on compatibility
+      parameters:
+        - name: skillId
+          in: query
+          required: true
+          description: Skill ID to find matching users for
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+        - name: limit
+          in: query
+          description: Maximum number of recommendations to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+            example: 10
+        - name: categories
+          in: query
+          description: Comma-separated list of preferred categories
+          required: false
+          schema:
+            type: string
+            example: "programming,design"
+        - name: minRating
+          in: query
+          description: Minimum user rating filter
+          required: false
+          schema:
+            type: number
+            minimum: 0
+            maximum: 5
+            example: 4.0
+        - name: maxDistance
+          in: query
+          description: Maximum distance in kilometers
+          required: false
+          schema:
+            type: number
+            minimum: 0
+            example: 50
+        - name: availabilityMatch
+          in: query
+          description: Filter by availability compatibility
+          required: false
+          schema:
+            type: boolean
+            example: true
+      responses:
+        '200':
+          description: User recommendations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Recommendation'
+                  message:
+                    type: string
+                    example: "User recommendations retrieved successfully"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/recommendations/feedback:
+    post:
+      tags:
+        - Recommendations
+      summary: Record recommendation feedback
+      description: Record user interaction with recommendations to improve future suggestions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - recommendationType
+                - recommendedId
+                - interactionType
+              properties:
+                recommendationType:
+                  type: string
+                  enum: [skill, user, course]
+                  example: "skill"
+                recommendedId:
+                  type: string
+                  format: uuid
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+                interactionType:
+                  type: string
+                  enum: [click, view, ignore]
+                  example: "click"
+      responses:
+        '200':
+          description: Interaction recorded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Interaction recorded successfully"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/recommendations/history:
+    get:
+      tags:
+        - Recommendations
+      summary: Get recommendation history
+      description: Retrieve the user's recommendation history
+      parameters:
+        - name: type
+          in: query
+          description: Filter by recommendation type
+          required: false
+          schema:
+            type: string
+            enum: [skill, user, course]
+            example: "skill"
+        - name: limit
+          in: query
+          description: Maximum number of records to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+            example: 20
+      responses:
+        '200':
+          description: Recommendation history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        recommendationType:
+                          type: string
+                          enum: [skill, user, course]
+                        recommendedId:
+                          type: string
+                          format: uuid
+                        score:
+                          type: number
+                          minimum: 0
+                          maximum: 1
+                        clicked:
+                          type: boolean
+                        createdAt:
+                          type: string
+                          format: date-time
+                  message:
+                    type: string
+                    example: "Recommendation history retrieved successfully"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/recommendations/preferences:
+    put:
+      tags:
+        - Recommendations
+      summary: Update recommendation preferences
+      description: Update user preferences for personalized recommendations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                preferredCategories:
+                  type: array
+                  items:
+                    type: string
+                  example: ["programming", "design", "marketing"]
+                availabilityHours:
+                  type: array
+                  items:
+                    type: string
+                  example: ["09:00-12:00", "14:00-17:00"]
+                learningGoals:
+                  type: array
+                  items:
+                    type: string
+                  example: ["Learn React", "Improve design skills"]
+                teachingInterests:
+                  type: array
+                  items:
+                    type: string
+                  example: ["JavaScript", "Node.js"]
+                communicationStyle:
+                  type: string
+                  enum: [formal, casual, mixed]
+                  example: "casual"
+                sessionDuration:
+                  type: integer
+                  minimum: 15
+                  maximum: 180
+                  example: 60
+      responses:
+        '200':
+          description: Preferences updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    description: Updated preferences object
+                  message:
+                    type: string
+                    example: "User preferences updated successfully"
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/recommendations/analytics:
+    get:
+      tags:
+        - Recommendations
+      summary: Get recommendation analytics
+      description: Get analytics about recommendation performance and user engagement
+      responses:
+        '200':
+          description: Recommendation analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      totalRecommendations:
+                        type: integer
+                        example: 150
+                      clickThroughRate:
+                        type: number
+                        example: 0.25
+                      topCategories:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            category:
+                              type: string
+                            count:
+                              type: integer
+                      engagementScore:
+                        type: number
+                        minimum: 0
+                        maximum: 1
+                        example: 0.75
+                  message:
+                    type: string
+                    example: "Recommendation analytics retrieved successfully"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'

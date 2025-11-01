@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,14 +22,32 @@ const types = ["Teaching", "Learning"];
 
 export default function Skills() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterType, setFilterType] = useState("all");
 
-  // TODO: Replace with actual user ID from auth context
-  const userId = "user-1";
+  // Get user ID from localStorage (stored during login)
+  const getUserId = () => {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user).id : null;
+  };
+  
+  const userId = getUserId();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!userId) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to manage your skills",
+        variant: "destructive",
+      });
+      setLocation("/login");
+    }
+  }, [userId, setLocation, toast]);
 
   const form = useForm({
     resolver: zodResolver(insertSkillSchema.extend({
@@ -46,49 +65,71 @@ export default function Skills() {
   });
 
   const { data: skills = [], isLoading, isError, error, refetch } = useQuery<Skill[]>({
-    queryKey: ["/api/skills"],
+    queryKey: ["/api/skills", userId],
     queryFn: async () => {
-      const response = await fetch("/api/skills?userId=" + userId);
-      if (!response.ok) throw new Error("Failed to fetch skills");
+      if (!userId) throw new Error("User not authenticated");
+      const response = await apiRequest("GET", `/api/skills?userId=${userId}`);
       return response.json();
     },
+    enabled: !!userId, // Only run query if userId exists
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("POST", "/api/skills", data),
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/skills", data);
+      return response.json();
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/skills"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/skills", userId] });
       toast({ title: "Skill added successfully" });
       setIsDialogOpen(false);
       form.reset({ userId, title: "", description: "", category: "", level: "", type: "", availability: "" });
     },
-    onError: () => {
-      toast({ title: "Failed to add skill", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ 
+        title: "Failed to add skill", 
+        description: error.message,
+        variant: "destructive" 
+      });
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, ...data }: any) => apiRequest("PUT", `/api/skills/${id}`, data),
+    mutationFn: async ({ id, ...data }: any) => {
+      const response = await apiRequest("PUT", `/api/skills/${id}`, data);
+      return response.json();
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/skills"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/skills", userId] });
       toast({ title: "Skill updated successfully" });
       setIsDialogOpen(false);
       setEditingSkill(null);
       form.reset({ userId, title: "", description: "", category: "", level: "", type: "", availability: "" });
     },
-    onError: () => {
-      toast({ title: "Failed to update skill", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ 
+        title: "Failed to update skill", 
+        description: error.message,
+        variant: "destructive" 
+      });
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiRequest("DELETE", `/api/skills/${id}`),
+    mutationFn: async (id: string) => {
+      const response = await apiRequest("DELETE", `/api/skills/${id}`);
+      return response.json();
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/skills"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/skills", userId] });
       toast({ title: "Skill deleted" });
     },
-    onError: () => {
-      toast({ title: "Failed to delete skill", variant: "destructive" });
+    onError: (error: Error) => {
+      toast({ 
+        title: "Failed to delete skill", 
+        description: error.message,
+        variant: "destructive" 
+      });
     },
   });
 
@@ -275,7 +316,7 @@ export default function Skills() {
                     <FormLabel>Skill Title</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="e.g., Web Development, Guitar Playing"
+                        placeholder="Skill Title"
                         {...field}
                         data-testid="input-skill-title"
                       />
@@ -293,7 +334,7 @@ export default function Skills() {
                     <FormLabel>Description</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="Describe what you can teach or what you want to learn..."
+                        placeholder="Skill Description"
                         rows={4}
                         {...field}
                         data-testid="input-skill-description"
@@ -384,7 +425,7 @@ export default function Skills() {
                       <FormLabel>Availability</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="e.g., Weekends, Evenings"
+                          placeholder="Availability"
                           {...field}
                           data-testid="input-skill-availability"
                         />

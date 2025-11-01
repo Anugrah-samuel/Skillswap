@@ -8,6 +8,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { webSocketClient } from "@/lib/websocket";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -43,14 +44,29 @@ export default function Signup() {
 
   const signupMutation = useMutation({
     mutationFn: async (data: SignupForm) => {
-      return await apiRequest("POST", "/api/auth/signup", {
+      const response = await apiRequest("POST", "/api/auth/signup", {
         username: data.username,
         email: data.email,
         fullName: data.fullName,
         password: data.password,
       });
+      return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Store tokens in localStorage
+      if (data.accessToken) {
+        localStorage.setItem('accessToken', data.accessToken);
+      }
+      if (data.refreshToken) {
+        localStorage.setItem('refreshToken', data.refreshToken);
+      }
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+      
+      // Connect to WebSocket
+      webSocketClient.connect();
+      
       toast({
         title: "Account created!",
         description: "Welcome to SkillSwap. Redirecting to dashboard...",
@@ -89,7 +105,7 @@ export default function Signup() {
                   <FormItem>
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="John Doe" {...field} data-testid="input-fullname" />
+                      <Input placeholder="Full Name" {...field} data-testid="input-fullname" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -103,7 +119,7 @@ export default function Signup() {
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input placeholder="johndoe" {...field} data-testid="input-username" />
+                      <Input placeholder="Username" {...field} data-testid="input-username" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -117,7 +133,7 @@ export default function Signup() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="john@example.com" {...field} data-testid="input-email" />
+                      <Input type="email" placeholder="Email Address" {...field} data-testid="input-email" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -134,7 +150,7 @@ export default function Signup() {
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
-                          placeholder="••••••••"
+                          placeholder="Password"
                           {...field}
                           data-testid="input-password"
                         />
@@ -162,7 +178,7 @@ export default function Signup() {
                     <FormControl>
                       <Input
                         type={showPassword ? "text" : "password"}
-                        placeholder="••••••••"
+                        placeholder="Confirm Password"
                         {...field}
                         data-testid="input-confirm-password"
                       />

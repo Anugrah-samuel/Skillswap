@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillSwap API Playground</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+
+        .auth-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .playground {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .request-panel, .response-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        textarea {
+            height: 120px;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button.secondary {
+            background: #6b7280;
+        }
+
+        button.secondary:hover {
+            background: #4b5563;
+        }
+
+        .response-content {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .status-success {
+            color: #059669;
+        }
+
+        .status-error {
+            color: #dc2626;
+        }
+
+        .endpoint-examples {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .example-endpoint {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .example-endpoint:hover {
+            background: #e9ecef;
+        }
+
+        .method-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .method-get { background: #10b981; color: white; }
+        .method-post { background: #3b82f6; color: white; }
+        .method-put { background: #f59e0b; color: white; }
+        .method-delete { background: #ef4444; color: white; }
+
+        .auth-status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .auth-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .auth-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>SkillSwap API Playground</h1>
+            <p>Interactive testing environment for the SkillSwap API. Authenticate first, then explore the endpoints.</p>
+        </div>
+
+        <div class="auth-section">
+            <h2>Authentication</h2>
+            <div id="authStatus" class="auth-status" style="display: none;"></div>
+            
+            <div class="form-group">
+                <label>Base URL:</label>
+                <input type="text" id="baseUrl" value="http://localhost:3000" />
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label>Username:</label>
+                    <input type="text" id="username" placeholder="Enter username" />
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="password" placeholder="Enter password" />
+                </div>
+            </div>
+            
+            <button onclick="login()">Login</button>
+            <button onclick="logout()" class="secondary">Logout</button>
+            <button onclick="getCurrentUser()" class="secondary">Get Current User</button>
+        </div>
+
+        <div class="playground">
+            <div class="request-panel">
+                <h2>Request</h2>
+                
+                <div class="form-group">
+                    <label>Method:</label>
+                    <select id="method">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Endpoint:</label>
+                    <input type="text" id="endpoint" placeholder="/api/..." />
+                </div>
+                
+                <div class="form-group">
+                    <label>Headers (JSON):</label>
+                    <textarea id="headers" placeholder='{"Content-Type": "application/json"}'></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Body (JSON):</label>
+                    <textarea id="body" placeholder='{"key": "value"}'></textarea>
+                </div>
+                
+                <button onclick="sendRequest()">Send Request</button>
+                <button onclick="clearRequest()" class="secondary">Clear</button>
+            </div>
+
+            <div class="response-panel">
+                <h2>Response</h2>
+                <div id="responseStatus"></div>
+                <div id="responseContent" class="response-content">
+                    Make a request to see the response here...
+                </div>
+            </div>
+        </div>
+
+        <div class="endpoint-examples">
+            <h2>Common Endpoints</h2>
+            <p>Click on any endpoint to load it into the request panel:</p>
+            
+            <div class="example-endpoint" onclick="loadExample('GET', '/api/auth/me', {}, {})">
+                <span class="method-badge method-get">GET</span>
+                <strong>/api/auth/me</strong> - Get current user information
+            </div>
+            
+            <div class="example-endpoint" onclick="loadExample('GET', '/api/credits/balance', {}, {})">
+                <span class="method-badge method-get">GET</span>
+                <strong>/api/credits/balance</strong> - Get credit balance
+            </div>
+            
+            <div class="example-endpoint" onclick="loadExample('POST', '/api/skills', {}, {name: 'JavaScript', category: 'Programming', level: 'intermediate', description: 'Frontend development', isOffering: true, isSeeking: false})">
+                <span class="method-badge method-post">POST</span>
+                <strong>/api/skills</strong> - Create a new skill
+            </div>
+            
+            <div class="example-endpoint" onclick="loadExample('GET', '/api/sessions/upcoming', {}, {})">
+                <span class="method-badge method-get">GET</span>
+                <strong>/api/sessions/upcoming</strong> - Get upcoming sessions
+            </div>
+            
+            <div class="example-endpoint" onclick="loadExample('GET', '/api/analytics/dashboard', {}, {})">
+                <span class="method-badge method-get">GET</span>
+                <strong>/api/analytics/dashboard</strong> - Get dashboard analytics
+            </div>
+            
+            <div class="example-endpoint" onclick="loadExample('GET', '/api/recommendations/skills?limit=5', {}, {})">
+                <span class="method-badge method-get">GET</span>
+                <strong>/api/recommendations/skills</strong> - Get skill recommendations
+            </div>
+            
+            <div class="example-endpoint" onclick="loadExample('POST', '/api/credits/purchase', {}, {amount: 100, paymentMethodId: 'pm_test_123'})">
+                <span class="method-badge method-post">POST</span>
+                <strong>/api/credits/purchase</strong> - Purchase credits
+            </div>
+            
+            <div class="example-endpoint" onclick="loadExample('GET', '/api/payments/methods', {}, {})">
+                <span class="method-badge method-get">GET</span>
+                <strong>/api/payments/methods</strong> - Get payment methods
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let accessToken = localStorage.getItem('skillswap_access_token');
+        let baseUrl = 'http://localhost:3000';
+
+        // Update auth status on page load
+        updateAuthStatus();
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            baseUrl = document.getElementById('baseUrl').value;
+
+            if (!username || !password) {
+                showAuthStatus('Please enter username and password', false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${baseUrl}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    accessToken = data.accessToken;
+                    localStorage.setItem('skillswap_access_token', accessToken);
+                    showAuthStatus(`Logged in as ${data.user.username}`, true);
+                } else {
+                    showAuthStatus(`Login failed: ${data.message}`, false);
+                }
+            } catch (error) {
+                showAuthStatus(`Login error: ${error.message}`, false);
+            }
+        }
+
+        function logout() {
+            accessToken = null;
+            localStorage.removeItem('skillswap_access_token');
+            showAuthStatus('Logged out', false);
+        }
+
+        async function getCurrentUser() {
+            if (!accessToken) {
+                showAuthStatus('Please login first', false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${baseUrl}/api/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAuthStatus(`Current user: ${data.username} (${data.email})`, true);
+                } else {
+                    showAuthStatus(`Error: ${data.message}`, false);
+                }
+            } catch (error) {
+                showAuthStatus(`Error: ${error.message}`, false);
+            }
+        }
+
+        function showAuthStatus(message, isSuccess) {
+            const statusEl = document.getElementById('authStatus');
+            statusEl.textContent = message;
+            statusEl.className = `auth-status ${isSuccess ? 'auth-success' : 'auth-error'}`;
+            statusEl.style.display = 'block';
+        }
+
+        function updateAuthStatus() {
+            if (accessToken) {
+                showAuthStatus('Token found in storage - try "Get Current User" to verify', true);
+            }
+        }
+
+        async function sendRequest() {
+            const method = document.getElementById('method').value;
+            const endpoint = document.getElementById('endpoint').value;
+            const headersText = document.getElementById('headers').value;
+            const bodyText = document.getElementById('body').value;
+            baseUrl = document.getElementById('baseUrl').value;
+
+            if (!endpoint) {
+                updateResponse('Error: Please enter an endpoint', null, false);
+                return;
+            }
+
+            let headers = {};
+            try {
+                if (headersText.trim()) {
+                    headers = JSON.parse(headersText);
+                }
+            } catch (error) {
+                updateResponse('Error: Invalid JSON in headers', null, false);
+                return;
+            }
+
+            // Add authorization header if token exists
+            if (accessToken) {
+                headers['Authorization'] = `Bearer ${accessToken}`;
+            }
+
+            let body = null;
+            if (bodyText.trim() && (method === 'POST' || method === 'PUT')) {
+                try {
+                    body = JSON.stringify(JSON.parse(bodyText));
+                    headers['Content-Type'] = 'application/json';
+                } catch (error) {
+                    updateResponse('Error: Invalid JSON in body', null, false);
+                    return;
+                }
+            }
+
+            const url = endpoint.startsWith('/') ? `${baseUrl}${endpoint}` : `${baseUrl}/api/${endpoint}`;
+
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers,
+                    body
+                });
+
+                const responseData = await response.json();
+                updateResponse(responseData, response.status, response.ok);
+            } catch (error) {
+                updateResponse(`Network error: ${error.message}`, null, false);
+            }
+        }
+
+        function updateResponse(data, status, isSuccess) {
+            const statusEl = document.getElementById('responseStatus');
+            const contentEl = document.getElementById('responseContent');
+
+            if (status) {
+                statusEl.innerHTML = `<strong class="${isSuccess ? 'status-success' : 'status-error'}">Status: ${status}</strong>`;
+            } else {
+                statusEl.innerHTML = `<strong class="status-error">Error</strong>`;
+            }
+
+            contentEl.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+
+        function loadExample(method, endpoint, headers, body) {
+            document.getElementById('method').value = method;
+            document.getElementById('endpoint').value = endpoint;
+            document.getElementById('headers').value = Object.keys(headers).length > 0 ? JSON.stringify(headers, null, 2) : '';
+            document.getElementById('body').value = Object.keys(body).length > 0 ? JSON.stringify(body, null, 2) : '';
+        }
+
+        function clearRequest() {
+            document.getElementById('endpoint').value = '';
+            document.getElementById('headers').value = '';
+            document.getElementById('body').value = '';
+            document.getElementById('responseContent').textContent = 'Make a request to see the response here...';
+            document.getElementById('responseStatus').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

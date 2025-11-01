@@ -8,6 +8,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { webSocketClient } from "@/lib/websocket";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -34,9 +35,24 @@ export default function Login() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginForm) => {
-      return await apiRequest("POST", "/api/auth/login", data);
+      const response = await apiRequest("POST", "/api/auth/login", data);
+      return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Store tokens in localStorage
+      if (data.accessToken) {
+        localStorage.setItem('accessToken', data.accessToken);
+      }
+      if (data.refreshToken) {
+        localStorage.setItem('refreshToken', data.refreshToken);
+      }
+      if (data.user) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+      }
+      
+      // Connect to WebSocket
+      webSocketClient.connect();
+      
       toast({
         title: "Welcome back!",
         description: "Redirecting to dashboard...",
@@ -75,7 +91,7 @@ export default function Login() {
                   <FormItem>
                     <FormLabel>Username or Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="johndoe" {...field} data-testid="input-username" />
+                      <Input placeholder="Username or Email" {...field} data-testid="input-username" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -99,7 +115,7 @@ export default function Login() {
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
-                          placeholder="••••••••"
+                          placeholder="Password"
                           {...field}
                           data-testid="input-password"
                         />

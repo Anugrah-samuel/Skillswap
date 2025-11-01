@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,35 +44,60 @@ interface MatchSuggestion {
 
 export default function Discover() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("All");
   const [selectedMatch, setSelectedMatch] = useState<MatchSuggestion | null>(null);
 
-  // TODO: Replace with actual user ID from auth context
-  const userId = "user-1";
+  // Get user ID from localStorage (stored during login)
+  const getUserId = () => {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user).id : null;
+  };
+  
+  const userId = getUserId();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!userId) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to discover skills",
+        variant: "destructive",
+      });
+      setLocation("/login");
+    }
+  }, [userId, setLocation, toast]);
 
   const { data: suggestions = [], isLoading, isError, error, refetch } = useQuery<MatchSuggestion[]>({
     queryKey: ["/api/matches/suggestions", userId],
     queryFn: async () => {
-      const response = await fetch(`/api/matches/suggestions/${userId}`);
-      if (!response.ok) throw new Error("Failed to fetch match suggestions");
+      if (!userId) throw new Error("User not authenticated");
+      const response = await apiRequest("GET", `/api/matches/suggestions/${userId}`);
       return response.json();
     },
+    enabled: !!userId, // Only run query if userId exists
   });
 
   const requestTradeMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("POST", "/api/matches", data),
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/matches/request", data);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/matches"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/matches/suggestions", userId] });
       toast({
         title: "Request sent!",
         description: `Your skill trade request has been sent.`,
       });
       setSelectedMatch(null);
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error('Skill trade request error:', error);
       toast({
         title: "Failed to send request",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -86,13 +112,17 @@ export default function Discover() {
 
   const handleRequestTrade = () => {
     if (!selectedMatch) return;
-    requestTradeMutation.mutate({
+    
+    const requestData = {
       userId,
       matchedUserId: selectedMatch.user.id,
       userSkillId: selectedMatch.learningSkill.id,
       matchedSkillId: selectedMatch.teachingSkill.id,
       status: "pending",
-    });
+    };
+    
+    console.log('Sending skill trade request:', requestData);
+    requestTradeMutation.mutate(requestData);
   };
 
   return (

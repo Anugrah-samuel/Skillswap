@@ -1,0 +1,438 @@
+paths:
+  /api/analytics/dashboard:
+    get:
+      tags:
+        - Analytics
+      summary: Get user dashboard analytics
+      description: Retrieve comprehensive analytics for the user's dashboard
+      responses:
+        '200':
+          description: Dashboard analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Analytics'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/analytics/skills:
+    get:
+      tags:
+        - Analytics
+      summary: Get skill analytics
+      description: Retrieve analytics for user's skills and learning progress
+      parameters:
+        - name: skillId
+          in: query
+          description: Specific skill ID to get analytics for
+          required: false
+          schema:
+            type: string
+            format: uuid
+            example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        '200':
+          description: Skill analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skillProgress:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        skillId:
+                          type: string
+                          format: uuid
+                        skillName:
+                          type: string
+                        proficiencyLevel:
+                          type: number
+                          minimum: 0
+                          maximum: 100
+                        sessionsCompleted:
+                          type: integer
+                        hoursLearned:
+                          type: number
+                        lastActivity:
+                          type: string
+                          format: date-time
+                  totalSkills:
+                    type: integer
+                  averageProficiency:
+                    type: number
+                  mostActiveSkill:
+                    type: string
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/analytics/teaching:
+    get:
+      tags:
+        - Analytics
+      summary: Get teaching analytics
+      description: Retrieve analytics for user's teaching activities and effectiveness
+      responses:
+        '200':
+          description: Teaching analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalSessionsTaught:
+                    type: integer
+                    example: 45
+                  totalHoursTaught:
+                    type: number
+                    example: 67.5
+                  averageRating:
+                    type: number
+                    minimum: 0
+                    maximum: 5
+                    example: 4.7
+                  totalStudents:
+                    type: integer
+                    example: 32
+                  creditsEarned:
+                    type: integer
+                    example: 450
+                  topSkillsTaught:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        skillName:
+                          type: string
+                        sessionCount:
+                          type: integer
+                        averageRating:
+                          type: number
+                  studentSatisfaction:
+                    type: number
+                    minimum: 0
+                    maximum: 100
+                    example: 94.2
+                  teachingEffectiveness:
+                    type: number
+                    minimum: 0
+                    maximum: 100
+                    example: 87.5
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/analytics/badges:
+    get:
+      tags:
+        - Analytics
+      summary: Get user badges
+      description: Retrieve all badges earned by the user
+      responses:
+        '200':
+          description: User badges retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                      example: "First Session"
+                    description:
+                      type: string
+                      example: "Completed your first skill exchange session"
+                    iconUrl:
+                      type: string
+                      format: uri
+                    category:
+                      type: string
+                      example: "milestone"
+                    earnedAt:
+                      type: string
+                      format: date-time
+                    rarity:
+                      type: string
+                      enum: [common, uncommon, rare, epic, legendary]
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/analytics/badges/available:
+    get:
+      tags:
+        - Analytics
+      summary: Get available badges
+      description: Retrieve all badges that can be earned on the platform
+      responses:
+        '200':
+          description: Available badges retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    name:
+                      type: string
+                    description:
+                      type: string
+                    iconUrl:
+                      type: string
+                      format: uri
+                    category:
+                      type: string
+                    requirements:
+                      type: string
+                    rarity:
+                      type: string
+                      enum: [common, uncommon, rare, epic, legendary]
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/analytics/badges/check:
+    post:
+      tags:
+        - Analytics
+      summary: Check and award new badges
+      description: Check if user has earned any new badges and award them
+      responses:
+        '200':
+          description: Badge check completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  newBadges:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        iconUrl:
+                          type: string
+                          format: uri
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/analytics/streak:
+    get:
+      tags:
+        - Analytics
+      summary: Get learning streak
+      description: Retrieve user's current learning streak information
+      responses:
+        '200':
+          description: Learning streak retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currentStreak:
+                    type: integer
+                    example: 7
+                  longestStreak:
+                    type: integer
+                    example: 21
+                  lastActivity:
+                    type: string
+                    format: date-time
+                  streakActive:
+                    type: boolean
+                    example: true
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/analytics/activity:
+    get:
+      tags:
+        - Analytics
+      summary: Get activity summary
+      description: Retrieve user activity summary for a specified period
+      parameters:
+        - name: days
+          in: query
+          description: Number of days to include in the summary
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 365
+            default: 30
+            example: 30
+      responses:
+        '200':
+          description: Activity summary retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  period:
+                    type: integer
+                    example: 30
+                  totalSessions:
+                    type: integer
+                    example: 12
+                  totalHours:
+                    type: number
+                    example: 18.5
+                  skillsLearned:
+                    type: integer
+                    example: 3
+                  skillsTaught:
+                    type: integer
+                    example: 5
+                  creditsEarned:
+                    type: integer
+                    example: 120
+                  creditsSpent:
+                    type: integer
+                    example: 80
+                  dailyActivity:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                          format: date
+                        sessions:
+                          type: integer
+                        hours:
+                          type: number
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/analytics/teaching/effectiveness:
+    get:
+      tags:
+        - Analytics
+      summary: Get teaching effectiveness score
+      description: Calculate and retrieve the user's teaching effectiveness score
+      responses:
+        '200':
+          description: Teaching effectiveness score retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  effectiveness:
+                    type: number
+                    minimum: 0
+                    maximum: 100
+                    example: 87.5
+                    description: Teaching effectiveness score as a percentage
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/analytics/export:
+    get:
+      tags:
+        - Analytics
+      summary: Export analytics report
+      description: Export comprehensive analytics data in JSON format
+      parameters:
+        - name: format
+          in: query
+          description: Export format (currently only JSON is supported)
+          required: false
+          schema:
+            type: string
+            enum: [json]
+            default: json
+            example: json
+      responses:
+        '200':
+          description: Analytics report exported successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  exportDate:
+                    type: string
+                    format: date-time
+                  user:
+                    $ref: '#/components/schemas/Analytics'
+                  skills:
+                    type: object
+                    description: Detailed skill analytics
+                  teaching:
+                    type: object
+                    description: Teaching analytics
+                  badges:
+                    type: array
+                    items:
+                      type: object
+                  streak:
+                    type: object
+                    description: Learning streak information
+                  activity:
+                    type: object
+                    properties:
+                      last30Days:
+                        type: object
+                      last90Days:
+                        type: object
+          headers:
+            Content-Disposition:
+              description: Attachment filename for download
+              schema:
+                type: string
+                example: 'attachment; filename="skillswap-analytics-user123-2024-01-15.json"'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
