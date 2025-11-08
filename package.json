@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "set NODE_ENV=development&& tsx server/index.ts",
     "build": "vite build",
+    "build:server": "tsc",
     "start": "bash start.sh",
     "test": "vitest --run",
     "test:watch": "vitest",
