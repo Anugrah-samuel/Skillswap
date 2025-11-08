@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { z, ZodSchema } from 'zod';
-import DOMPurify from 'isomorphic-dompurify';
+// Removed isomorphic-dompurify for deployment compatibility
 
 // Input validation middleware factory
 export function validateInput(schema: ZodSchema) {
@@ -83,10 +83,15 @@ function sanitizeString(input: string): string {
 
   // HTML sanitization for content fields
   if (isHtmlContent(sanitized)) {
-    sanitized = DOMPurify.sanitize(sanitized, {
-      ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li'],
-      ALLOWED_ATTR: []
-    });
+    // Basic HTML sanitization - remove dangerous tags and attributes
+    sanitized = sanitized
+      .replace(/<script[^>]*>.*?<\/script>/gi, '') // Remove scripts
+      .replace(/<[^>]*>/g, (match) => {
+        // Allow only safe tags
+        const safeTags = ['b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li'];
+        const tagName = match.match(/<\/?([a-zA-Z]+)/)?.[1]?.toLowerCase();
+        return safeTags.includes(tagName || '') ? match.replace(/\s+\w+="[^"]*"/g, '') : '';
+      });
   }
 
   return sanitized;

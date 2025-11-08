@@ -93,7 +93,7 @@ describe("Course Management API", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    
+
     app = express();
     app.use(express.json());
     server = await registerRoutes(app);
@@ -136,7 +136,7 @@ describe("Course Management API", () => {
     };
 
     authToken = "valid-jwt-token";
-    
+
     // Mock auth verification
     mockAuthService.verifyAccessToken.mockReturnValue({
       userId: mockUser.id,
